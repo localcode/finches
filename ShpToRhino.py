@@ -27,7 +27,7 @@ def chopPoints( feature ):
     if feature.numParts > 1:
         return [p for p in chop(feature.parts, feature.points3D)]
     else:
-        return feature.points
+        return [feature.points3D]
 
 def shpToPoints( feature, translationVector=None ):
     points = [Rhino.Geometry.Point3d(*p) for p in feature.points3D]
@@ -37,7 +37,7 @@ def shpToPoints( feature, translationVector=None ):
 
 
 def shpToCurve( feature, translationVector=None, degree=1):
-    parts = chopPoints( feature.parts, feature.points3D )
+    parts = chopPoints( feature )
     crvs = []
     for part in parts:
         points = []
@@ -45,9 +45,9 @@ def shpToCurve( feature, translationVector=None, degree=1):
             rhPoint = Rhino.Geometry.Point3d( *pt )
             points.append( rhPoint )
         crv = Rhino.Geometry.Curve.CreateControlPointCurve( points, degree )
-
         if translationVector:
             crv.Translate( translationVector )
+
         crvs.append( crv )
     return crvs
 
@@ -74,7 +74,7 @@ def shpToMesh( multiPatchFeature, translationVector=None ):
     mesh.Compact() # mesh all fresh and ready!
     if translationVector:
         mesh.Translate(translationVector)
-    return mesh
+    return [mesh]
 
 
 
@@ -95,7 +95,7 @@ def ShpFileToRhino( filepath, zero=True, tVect=None ):
     records = shpfile.records
     geoms = []
     for r in records:
-        geoms.append( translationDict[ shpfile.shapeType ]( r, tVect ) )
+        geoms.extend( translationDict[ shpfile.shapeType ]( r, tVect ) )
     return geoms
 
 if __name__=='__main__':
@@ -108,8 +108,9 @@ if __name__=='__main__':
         'lotsWGS84UTMZ10.shp',
     ]
     folder = 'testdata'
-    fpath = os.path.join(folder, path[1])
+    fpath = os.path.join(folder, path[4])
     import scriptcontext
     geom = ShpFileToRhino( fpath )
-    scriptcontext.doc.Objects.AddCurve( geom[0] )
+    for g in geom:
+        scriptcontext.doc.Objects.AddCurve( g )
 

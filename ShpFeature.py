@@ -22,7 +22,7 @@ class ShpFeature(object):
                 dbfData[db[0][i]] = db[self.recordNumber + 2][i]
         return dbfData
 
-    def make3D(self,zVals):
+    def make3D(self, zVals=None):
         """
         This method will take a list of z values and use them to create a new
         attribute called points3D, which contains 3d points. ESRI shapefiles
@@ -34,6 +34,8 @@ class ShpFeature(object):
         """
         # if there's not enough z values for the number of points
         # or not enough points for the number of z values
+        if not zVals:
+            zVals = [0 for i in range(self.numPoints)]
         if len(zVals) != self.numPoints:
             print "The number of Z values does not correspond to the number of points."
             return
@@ -71,7 +73,7 @@ class ShpPoint(ShpFeature):
         self.points = [self.shpFile._readPoint()]
         self.x = self.points[0][0]
         self.y = self.points[0][1]
-        self.points3D = [(self.x,self.y,0.0)]
+        self.make3D()
 
 class ShpPointM(ShpPoint):
     def __init__(self,ShpFile, recordNumber):
@@ -79,6 +81,7 @@ class ShpPointM(ShpPoint):
         ShpPoint.__init__(self, ShpFile, recordNumber)
 
         self.m = self.shpFile._readZ()
+        self.make3D()
 
 class ShpPointZ(ShpPoint):
     def __init__(self,ShpFile, recordNumber):
@@ -99,6 +102,7 @@ class ShpMultiPoint(ShpFeature):
         self.boundingBox = self.shpFile._readBoundingBox()
         self.numPoints = self.shpFile._readNumPoints()
         self.points = self.shpFile._readPoints(self.numPoints)
+        self.make3D()
 
 class ShpMultiPointM(ShpMultiPoint):
 
@@ -107,6 +111,7 @@ class ShpMultiPointM(ShpMultiPoint):
         ShpMultiPoint.__init__(self, ShpFile, recordNumber)
         self.mBounds = self.shpFile._readZBounds()
         self.mArray = self.shpFile._readZArray(self.numPoints)
+        self.make3D()
 
 class ShpMultiPointZ(ShpMultiPoint):
 
@@ -130,6 +135,7 @@ class ShpPolyLine(ShpFeature):
         self.numPoints = self.shpFile._readNumPoints()
         self.parts = self.shpFile._readParts(self.numParts)
         self.points = self.shpFile._readPoints(self.numPoints)
+        self.make3D()
 
 class ShpPolyLineM(ShpPolyLine):
 
@@ -139,6 +145,7 @@ class ShpPolyLineM(ShpPolyLine):
 
         self.mBounds = self.shpFile._readZBounds()
         self.mArray = self.shpFile._readZArray(self.numPoints)
+        self.make3D()
 
 class ShpPolyLineZ(ShpPolyLine):
 
@@ -163,6 +170,7 @@ class ShpPolygon(ShpFeature):
         self.numPoints = self.shpFile._readNumPoints()
         self.parts = self.shpFile._readParts(self.numParts)
         self.points = self.shpFile._readPoints(self.numPoints)
+        self.make3D()
 
 class ShpPolygonM(ShpPolygon):
 
@@ -172,6 +180,7 @@ class ShpPolygonM(ShpPolygon):
 
         self.mBounds = self.shpFile._readZBounds()
         self.mArray = self.shpFile._readZArray(self.numPoints)
+        self.make3D()
 
 class ShpPolygonZ(ShpPolygon):
 
@@ -202,6 +211,6 @@ class ShpMultiPatch(ShpFeature):
         self.mBounds = self.shpFile._readZBounds()
         self.mArray = self.shpFile._readZArray(self.numPoints)
         self.make3D(self.zArray)
-        self.points = [self.shpFile._readPoint()]
+        #self.points = [self.shpFile._readPoint()]
 
 
