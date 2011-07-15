@@ -4,11 +4,17 @@ try:
 except:
     pass
 
-class RhinoFeature(object):
-    def __init__(self, geometry, attributes):
-        self.geom = geometry
-        self.att = attributes
 
+def addUserStrings(feature, geom):
+    data = feature.dbfData
+    for k in data:
+        geom.SetUserString(k, str(data[k]))
+    return geom
+
+def tVect(geom, vector):
+    geom.Translate(vector)
+    geom.SetUserString('TranslationVector', str(vector) )
+    return geom
 
 def transVectorFromBBox(shpFile):
     """Uses the bounding box of a shapefile to make a vector moving Rhino geometry to the origin. The translation vector
@@ -30,11 +36,10 @@ def chopPoints( feature ):
         return [feature.points3D]
 
 def shpToPoints( feature, translationVector=None ):
-    points = [Rhino.Geometry.Point3d(*p) for p in feature.points3D]
+    points = [addUserStrings(feature, Rhino.Geometry.Point3d(*p)) for p in feature.points3D]
     if translationVector:
         points = [p.Add(p, translationVector) for p in points]
     return points
-
 
 def shpToCurve( feature, translationVector=None, degree=1):
     parts = chopPoints( feature )
@@ -46,11 +51,9 @@ def shpToCurve( feature, translationVector=None, degree=1):
             points.append( rhPoint )
         crv = Rhino.Geometry.Curve.CreateControlPointCurve( points, degree )
         if translationVector:
-            crv.Translate( translationVector )
-
-        crvs.append( crv )
+            crv = tVect(crv, translationVector )
+        crvs.append( addUserStrings(feature, crv) )
     return crvs
-
 
 def shpToMesh( multiPatchFeature, translationVector=None ):
     m = multiPatchFeature
@@ -73,8 +76,8 @@ def shpToMesh( multiPatchFeature, translationVector=None ):
     mesh.Normals.ComputeNormals()
     mesh.Compact() # mesh all fresh and ready!
     if translationVector:
-        mesh.Translate(translationVector)
-    return [mesh]
+        mesh = tVect( mesh, translationVector)
+    return [ addUserStrings(m, mesh) ]
 
 
 
@@ -98,7 +101,7 @@ def ShpFileToRhino( filepath, zero=True, tVect=None ):
         geoms.extend( translationDict[ shpfile.shapeType ]( r, tVect ) )
     return geoms
 
-if __name__=='__main__':
+def run():
     import os
     path = [
         'multipatch_Project.shp',
@@ -108,9 +111,15 @@ if __name__=='__main__':
         'lotsWGS84UTMZ10.shp',
     ]
     folder = 'testdata'
-    fpath = os.path.join(folder, path[4])
+    fpath = os.path.join(folder, path[0])
     import scriptcontext
     geom = ShpFileToRhino( fpath )
     for g in geom:
-        scriptcontext.doc.Objects.AddCurve( g )
+        scriptcontext.doc.Objects.AddMesh( g )
+
+
+if __name__=='__main__':
+    #import profile
+    #profile.run('run()')
+    run()
 
