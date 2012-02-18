@@ -8,7 +8,10 @@ except:
 def addUserStrings(feature, geom):
     data = feature.dbfData
     for k in data:
-        geom.SetUserString(k, str(data[k]))
+        try:
+            geom.SetUserString(k, unicode(data[k]))
+        except:
+            pass
     return geom
 
 def tVect(geom, vector):
