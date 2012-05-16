@@ -1,4 +1,4 @@
-# RhinoTools, Lcoal Code
+# RhinoTools, Local Code
 
 ----
 
