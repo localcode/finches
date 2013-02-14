@@ -5,11 +5,12 @@ except:
     pass
 
 
+
 def addUserStrings(feature, geom):
     data = feature.dbfData
     for k in data:
         try:
-            geom.SetUserString(k, unicode(data[k]))
+            geom.UserDictionary.Set(k, data[k])
         except:
             pass
     return geom
